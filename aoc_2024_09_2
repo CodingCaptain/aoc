@@ -1,0 +1,295 @@
+package org.example;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class Main {
+
+  public static void main(String[] args) throws IOException {
+    String s = Tools.getLines("09").get(0);
+//            s = "2333133121414131402";
+
+    char[] charArray = s.toCharArray();
+
+    Map<Integer, String> deletedIdsMap = new HashMap<>();
+
+    List<String> list1 = new ArrayList<>();
+    int counter = 0;
+    for (int i = 0; i < charArray.length; i++) {
+      int n = Integer.parseInt(String.valueOf(charArray[i]));
+      if (i % 2 == 0) {
+        for (int i1 = 0; i1 < n; i1++) {
+          list1.add("[" + counter + "]");
+        }
+        counter++;
+      } else {
+        for (int i1 = 0; i1 < n; i1++) {
+          list1.add("[.]");
+        }
+      }
+    }
+
+    String[] list = list1.toArray(new String[list1.size()]);
+
+    int revCounterStart = list.length - 1;
+    for (int i = list.length - 1; i >= 0; i--) {
+      if (!list[i].equals("[.]")) {
+        break;
+      }
+      revCounterStart--;
+    }
+
+    String firstRevElement = list[revCounterStart];
+    int currentBlockId = Integer.parseInt(firstRevElement.replaceAll("\\[|\\]", ""));
+
+    while (/*!arrayToString(list).matches("\\d+\\.+") || */currentBlockId > 0) {
+      int reverseCounterStart = list.length - 1;
+      for (int i = list.length - 1; i >= 0; i--) {
+        if (list[i].equals("[" + currentBlockId + "]")) {
+          break;
+        }
+        reverseCounterStart--;
+      }
+
+      String revElement = list[reverseCounterStart];
+      int reverseCounterEnd = reverseCounterStart;
+      for (int i = reverseCounterStart; i >= 0; i--) {
+        if (!list[i].equals(revElement)) {
+          break;
+        }
+        reverseCounterEnd--;
+      }
+
+      String[] lastBlock = getSublist(list, reverseCounterEnd + 1, reverseCounterStart + 1);
+      int forwardCounterStart = 0;
+      int forwardCounterEnd = 0;
+      int startSpaceSize = 0;
+      int forwardStep = 0;
+      int lastPointPos = 0;
+//      while (startSpaceSize < lastBlock.length && forwardCounterEnd <= reverseCounterEnd) {
+      while (startSpaceSize < lastBlock.length && forwardCounterEnd <= reverseCounterEnd) {
+        forwardCounterStart = forwardStep;
+                forwardCounterStart = lastPointPos;
+        for (int i1 = forwardStep; i1 < list.length; i1++) {
+          if (list[i1].equals("[.]")) {
+            lastPointPos = i1;
+            break;
+          }
+          forwardCounterStart++;
+//          forwardStep++;
+        }
+
+//        forwardCounterStart = arrayToString(list).indexOf(".")/*+forwardStep*/;
+
+        forwardCounterEnd = forwardCounterStart;
+//        String element = list[forwardCounterStart];
+        for (int i1 = forwardCounterStart; i1 < list.length; i1++) {
+//          if (!list[i1].equals(element)) {
+          if (!list[i1].equals("[.]")) {
+            break;
+          }
+          forwardCounterEnd++;
+        }
+
+        String[] startSpace = getSublist(list, forwardCounterStart, forwardCounterEnd);
+        startSpaceSize = startSpace.length;
+
+        if (startSpaceSize >= lastBlock.length) {
+          int lastBlockCounter = 0;
+          for (int i = forwardCounterStart; i < forwardCounterStart + lastBlock.length; i++) {
+            list[i] = lastBlock[lastBlockCounter++];
+          }
+          break;
+        }
+
+        forwardStep++;
+      }
+      int lbCounter = 0;
+      for (int i = reverseCounterEnd + 1; i < reverseCounterEnd + lastBlock.length + 1; i++) {
+        if (startSpaceSize < lastBlock.length) {
+          deletedIdsMap.put(i, lastBlock[lbCounter++]);
+        }
+        list[i] = "[.]";
+      }
+
+      // look if fits
+      // if not, save blocks position and value in map and then delete from list
+
+      if (currentBlockId % 100 == 0)
+        System.out.println(currentBlockId);
+//      System.out.println(arrayToString(list));
+
+//      if (Arrays.stream(getSublist(list, 0, reverseCounterEnd)).noneMatch(a -> a.equals("[.]"))) {
+//        break;
+//      }
+
+      currentBlockId--;
+    }
+
+    deletedIdsMap.forEach((key, value) -> list[key] = value);
+
+    System.out.println(arrayToString(list));
+
+    long checksum = calcChecksumForArray(list);
+    System.out.println(checksum);
+
+    //    solveWithList();
+
+  }
+
+  private static String[] getSublist(String[] list, int from, int to) {
+    String[] output = new String[to - from];
+    int counter = 0;
+    for (int i = from; i < to; i++) {
+      output[counter++] = list[i];
+    }
+    return output;
+  }
+
+  private static void solveWithList() throws IOException {
+    String s = Tools.getLines("09").get(0);
+    //    s = "2333133121414131402";
+
+    char[] charArray = s.toCharArray();
+
+    Map<Integer, String> deletedIdsMap = new HashMap<>();
+
+    List<String> list = new ArrayList<>();
+    int counter = 0;
+    for (int i = 0; i < charArray.length; i++) {
+      int n = Integer.parseInt(String.valueOf(charArray[i]));
+      if (i % 2 == 0) {
+        for (int i1 = 0; i1 < n; i1++) {
+          list.add("[" + counter + "]");
+        }
+        counter++;
+      } else {
+        for (int i1 = 0; i1 < n; i1++) {
+          list.add("[.]");
+        }
+      }
+    }
+
+    int revCounterStart = list.size() - 1;
+    for (int i = list.size() - 1; i >= 0; i--) {
+      if (!list.get(i).equals("[.]")) {
+        break;
+      }
+      revCounterStart--;
+    }
+
+    String firstRevElement = list.get(revCounterStart);
+    int currentBlockId = Integer.parseInt(firstRevElement.replaceAll("\\[|\\]", ""));
+
+    while (!listToString(list).matches("\\d+\\.+") || currentBlockId > 0) {
+      int reverseCounterStart = list.size() - 1;
+      for (int i = list.size() - 1; i >= 0; i--) {
+        if (list.get(i).equals("[" + currentBlockId + "]")) {
+          break;
+        }
+        reverseCounterStart--;
+      }
+
+      String revElement = list.get(reverseCounterStart);
+      int reverseCounterEnd = reverseCounterStart;
+      for (int i = reverseCounterStart; i >= 0; i--) {
+        if (!list.get(i).equals(revElement)) {
+          break;
+        }
+        reverseCounterEnd--;
+      }
+
+      List<String> lastBlock = list.subList(reverseCounterEnd + 1, reverseCounterStart + 1);
+      int forwardCounterStart = 0;
+      int forwardCounterEnd = 0;
+      int startSpaceSize = 0;
+      int forwardStep = 0;
+      while (startSpaceSize < lastBlock.size() && forwardCounterEnd <= reverseCounterEnd) {
+        forwardCounterStart = forwardStep;
+        for (int i1 = forwardStep; i1 < list.size(); i1++) {
+          if (list.get(i1).equals("[.]")) {
+            break;
+          }
+          forwardCounterStart++;
+        }
+
+        forwardCounterEnd = forwardCounterStart;
+        String element = list.get(forwardCounterStart);
+        for (int i1 = forwardCounterStart; i1 < list.size(); i1++) {
+          if (!list.get(i1).equals(element)) {
+            break;
+          }
+          forwardCounterEnd++;
+        }
+
+        List<String> startSpace = list.subList(forwardCounterStart, forwardCounterEnd);
+        startSpaceSize = startSpace.size();
+
+        if (startSpaceSize >= lastBlock.size()) {
+          int lastBlockCounter = 0;
+          for (int i = forwardCounterStart; i < forwardCounterStart + lastBlock.size(); i++) {
+            list.set(i, lastBlock.get(lastBlockCounter++));
+          }
+          break;
+        }
+
+        forwardStep++;
+      }
+      int lbCounter = 0;
+      for (int i = reverseCounterEnd + 1; i < reverseCounterEnd + lastBlock.size() + 1; i++) {
+        if (startSpaceSize < lastBlock.size()) {
+          deletedIdsMap.put(i, lastBlock.get(lbCounter++));
+        }
+        list.set(i, "[.]");
+      }
+
+      // look if fits
+      // if not, save blocks position and value in map and then delete from list
+
+      if (currentBlockId % 100 == 0)
+        System.out.println(currentBlockId);
+
+      if (!list.subList(0, reverseCounterEnd).contains("[.]")) {
+        break;
+      }
+
+      currentBlockId--;
+    }
+
+    deletedIdsMap.forEach(list::set);
+
+    System.out.println(listToString(list));
+
+    long checksum = calcChecksum(list);
+    System.out.println(checksum);
+  }
+
+  private static long calcChecksum(List<String> list) {
+    long sum = 0;
+    for (int i = 0; i < list.size(); i++) {
+      if (!list.get(i).equals("[.]")) {
+        sum += i * Integer.parseInt(list.get(i).replaceAll("\\[|\\]", ""));
+      }
+    }
+    return sum;
+  }
+
+  private static long calcChecksumForArray(String[] list) {
+    long sum = 0;
+    for (int i = 0; i < list.length; i++) {
+      if (!list[i].equals("[.]")) {
+        sum += i * Long.parseLong(list[i].replaceAll("\\[|\\]", ""));
+      }
+    }
+    return sum;
+  }
+
+  private static String listToString(List<String> list) {
+    return list.stream().collect(Collectors.joining()).replaceAll("\\[|\\]", "");
+  }
+
+  private static String arrayToString(String[] array) {
+    return String.join("", array).replaceAll("\\[|\\]", "");
+  }
+}
