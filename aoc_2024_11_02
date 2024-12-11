@@ -1,0 +1,114 @@
+package org.example;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class Main5 {
+
+  // Map zum Speichern von bereits berechneten Ergebnissen (Memoization)
+  private static final Map<Long, List<Long>> memoCache = new HashMap<>();
+  private static final Map<Long, Long> memoCache1 = new HashMap<>();
+  private static final Map<String, List<Long>> memoCache2 = new HashMap<>();
+
+  public static void main(String[] args) {
+
+    String line = "1 24596 0 740994 60 803 8918 9405859";
+    line = "1";
+//    line = "253000";
+//    line = "1";
+//    line = "7";
+    int times = 75;
+
+    List<Long> list = new LinkedList<>(Arrays.stream(line.split("\\s"))
+        .map(Long::parseLong)
+        .toList());
+
+    for (int time = 0; time < times; time++) {
+      list = processList(list); // Statt eine neue Liste zu erstellen, bearbeiten wir die bestehende Liste direkt
+      System.out.println("blink no. " + (time + 1) + " " + list.size());
+    }
+  }
+
+  // Bearbeitet die Liste in-place, ohne eine neue Liste zu erstellen
+  private static List processList(List<Long> list) {
+
+    List<Long> list3 = memoCache2.get(list.stream().sorted().map(String::valueOf).collect(Collectors.joining(" ")));
+    if(list3 != null) {
+      return list3;
+    }
+
+    LinkedList<Long> updatedList = new LinkedList<>(); // Neue Liste für die aktuellen Updates
+
+//    int i = 0;
+//    while (i < list.size()) {
+//      Long value = list.get(i);
+
+    for (Long value : list) {
+      if (value == 0) {
+//        list.set(i, 1L); // Setze den Wert auf 1, wenn er 0 ist
+        updatedList.add(1L); // Setze den Wert auf 1, wenn er 0 ist
+      } else if (isEvenLength(value)) {
+        // Überprüfen, ob der Wert bereits berechnet wurde (Memoization)
+        List<Long> cachedResult = memoCache.get(value);
+        if (cachedResult != null) {
+          // Wenn der Wert bereits berechnet wurde, verwenden wir das gespeicherte Ergebnis
+//          list.set(i, cachedResult.get(0));
+//          list.add(i + 1, cachedResult.get(1));
+          updatedList.add(cachedResult.get(0));
+          updatedList.add(cachedResult.get(1));
+//          i++; // Überspringe den nächsten Index, da wir ihn gerade hinzugefügt haben
+        } else {
+          // Berechne die Hälften der Zahl ohne String-Operationen
+          long firstHalf = getFirstHalf(value);
+          long secondHalf = getSecondHalf(value);
+
+          // Speichere das Ergebnis im Cache
+          memoCache.put(value, Arrays.asList(firstHalf, secondHalf));
+
+          // Ersetze den aktuellen Wert durch die Hälften und füge die zweite Hälfte an der richtigen Position ein
+//          list.set(i, firstHalf);
+//          list.add(i + 1, secondHalf);
+          updatedList.add(firstHalf);
+          updatedList.add(secondHalf);
+//          i++; // Überspringe den nächsten Index, da wir ihn gerade hinzugefügt haben
+        }
+      } else {
+//        list.set(i, value * 2024);
+        Long cachedResult = memoCache1.get(value);
+        if (cachedResult != null) {
+          updatedList.add(cachedResult);
+        } else {
+          long e = value * 2024;
+          updatedList.add(e);
+          memoCache1.put(value, e);
+        }
+
+      }
+//      i++;
+    }
+
+    memoCache2.put(list.stream().sorted().map(String::valueOf).collect(Collectors.joining(" ")), updatedList);
+    return updatedList;
+  }
+
+  // Berechnet die erste Hälfte der Zahl ohne String-Konvertierung
+  private static long getFirstHalf(long value) {
+    int numDigits = (int) Math.log10(value) + 1; // Anzahl der Stellen
+    long divisor = (long) Math.pow(10, numDigits / 2);
+    return value / divisor; // Erste Hälfte der Zahl
+  }
+
+  // Berechnet die zweite Hälfte der Zahl ohne String-Konvertierung
+  private static long getSecondHalf(long value) {
+    int numDigits = (int) Math.log10(value) + 1; // Anzahl der Stellen
+    long divisor = (long) Math.pow(10, numDigits / 2);
+    return value % divisor; // Zweite Hälfte der Zahl
+  }
+
+  // Bestimmt, ob die Zahl eine gerade Anzahl von Stellen hat
+  private static boolean isEvenLength(long value) {
+    int numDigits = (int) Math.log10(value) + 1; // Anzahl der Stellen
+    return numDigits % 2 == 0; // Wenn die Anzahl der Stellen gerade ist, return true
+  }
+}
+
