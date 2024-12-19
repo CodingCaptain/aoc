@@ -1,0 +1,360 @@
+import java.io.FileNotFoundException;
+import java.util.*;
+
+public class Day_2024_16 {
+
+  private static int startY;
+  private static int startX;
+  private static int endY;
+  private static int endX;
+  private static Position[][] grid;
+  private static List<Position> openList;
+  private static Set<Position> checkedSet;
+
+  private static Position currentPosition;
+
+  private static boolean goalReached;
+  private static int step;
+  private static int stepsTaken;
+  private static int paths;
+  private static Set<Position> visitedPositions;
+  private static char[][] gridVisited;
+  private static char[][] gridVi2;
+  private static List<String> visPosList;
+
+  public static void main(String[] args) throws FileNotFoundException {
+
+    List<String> lines = Tools.getLines("2024_16");
+    lines = Tools.getLines("2024_16_test_01");
+    lines = Tools.getLines("2024_16_test_02");
+
+    for (int y = 0; y < lines.size(); y++) {
+      for (int x = 0; x < lines.get(0).length(); x++) {
+        if (lines.get(y).charAt(x) == 'S') {
+          startY = y;
+          startX = x;
+        } else if (lines.get(y).charAt(x) == 'E') {
+          endY = y;
+          endX = x;
+        }
+      }
+    }
+
+    int counter = 0;
+
+//    int input = 10;
+    paths = 0;
+//    gridVi2 = new char[number][number];
+//    for (int y = 0; y < gridVisited.length; y++) {
+//      for (int x = 0; x < gridVisited[0].length; x++) {
+//        long n = x * x + 3 * x + 2 * x * y + y + y * y + input;
+//        String binaryString = Long.toBinaryString(n);
+//        boolean even = binaryString.chars().filter(b -> b == '1').count() % 2 == 0;
+//        gridVisited[y][x] = even ? '.' : '#';
+//        gridVi2[y][x] = even ? '.' : '#';
+//      }
+//    }
+
+    visitedPositions = new HashSet<>();
+//    for (int allY = 0; allY < number; allY++) {
+//      loop:
+//      for (int allX = 0; allX < number; allX++) {
+//        startY = 1;
+//        startX = 1;
+//    endY = 39;
+//    endX = 31;
+//        endY = allY;
+//        endX = allX;
+    step = 0;
+    stepsTaken = 0;
+    goalReached = false;
+    grid = new Position[lines.size()][lines.getFirst().length()];
+    grid = new Position[lines.size()][lines.getFirst().length()];
+    gridVisited = new char[lines.size()][lines.getFirst().length()];
+    gridVi2 = new char[lines.size()][lines.getFirst().length()];
+    openList = new ArrayList<>();
+    checkedSet = new HashSet<>();
+
+    for (int y = 0; y < lines.size(); y++) {
+      for (int x = 0; x < lines.getFirst().length(); x++) {
+
+        grid[y][x] = new Position(y, x, lines.get(y).charAt(x) == '#', lines.get(y).charAt(x));
+        gridVisited[y][x] = lines.get(y).charAt(x);
+        gridVi2[y][x] = lines.get(y).charAt(x);
+
+        setCost(grid[y][x]);
+        if (grid[y][x].gCost <= 50)
+          counter++;
+      }
+    }
+
+//    printGrid();
+    currentPosition = grid[startY][startX];
+
+    search();
+
+//      printGrid();
+
+
+//      System.out.println((stepsTaken));
+
+
+//        printGrid();
+//        System.out.println("Test");
+//        printGrid2();
+//        System.out.println();
+//      }
+//    }
+
+
+    System.out.println(paths);
+//    System.out.println("VisPos: " + visitedPositions.size());
+    printGrid2();
+
+    int vc = 0;
+    for (int y = 0; y < gridVi2.length; y++) {
+      for (int x = 0; x < gridVi2[0].length; x++) {
+        if (gridVi2[y][x] == '█') {
+          vc++;
+        }
+      }
+    }
+    System.out.println(vc);
+
+
+    int lastY = Integer.parseInt(visPosList.get(visPosList.size() - 1).split("-")[0]);
+    int lastX = Integer.parseInt(visPosList.get(visPosList.size() - 1).split("-")[1]);
+    Direction lastDirection = Direction.EAST;
+    Direction currentDirection = Direction.EAST;
+    long rotationCounter = 0;
+    for (int i = visPosList.size() - 1; i >= 0; i--) {
+      if(i < visPosList.size() - 1) {
+        String s = visPosList.get(i);
+        int y = Integer.parseInt(s.split("-")[0]);
+        int x = Integer.parseInt(s.split("-")[1]);
+
+        if(lastY - y == 1) {
+          currentDirection = Direction.NORTH;
+        }
+        else if(lastY - y == -1) {
+          currentDirection = Direction.SOUTH;
+        }
+        else if(lastX - x == 1) {
+          currentDirection = Direction.EAST;
+        }
+        else if(lastX - x == -1) {
+          currentDirection = Direction.WEST;
+        }
+
+        lastY = y;
+        lastX = x;
+
+        if(lastDirection != currentDirection)
+          rotationCounter++;
+
+        lastDirection = currentDirection;
+      }
+    }
+
+    long sum = rotationCounter*1000 + visPosList.size() - 1;
+
+    System.out.println(sum);
+
+  }
+
+  private static void setCost(Position position) {
+    int gCost = Math.abs(position.y - startY) + Math.abs(position.x - startX);
+    int hCost = Math.abs(position.y - endY) + Math.abs(position.x - endX);
+    int fCost = gCost + hCost;
+
+    position.gCost = gCost;
+    position.hCost = hCost;
+    position.fCost = fCost;
+  }
+
+  public static void search() {
+
+    while (!goalReached && step < 10000) {
+
+      int y = currentPosition.y;
+      int x = currentPosition.x;
+
+      currentPosition.isChecked = true;
+      checkedSet.add(currentPosition);
+      openList.remove(currentPosition);
+
+      // OPEN THE UP POSITION
+      if (y > 0)
+        openPosition(grid[y - 1][x]);
+      // OPEN THE RIGHT POSITION
+      if (x < grid[0].length - 1)
+        openPosition(grid[y][x + 1]);
+      // OPEN THE DOWN POSITION
+      if (y < grid.length - 1)
+        openPosition(grid[y + 1][x]);
+      // OPEN THE LEFT POSITION
+      if (x > 0)
+        openPosition(grid[y][x - 1]);
+
+      int bestPosIndex = 0;
+      int bestFCost = 999999;
+
+      for (int i = 0; i < openList.size(); i++) {
+        Position position = openList.get(i);
+        if (position.fCost < bestFCost) {
+          bestPosIndex = i;
+          bestFCost = position.fCost;
+        } else if (position.fCost == bestFCost) {
+          if (position.gCost < openList.get(bestPosIndex).gCost) {
+            bestPosIndex = i;
+          }
+        }
+      }
+
+      if (openList.isEmpty())
+        break;
+
+      currentPosition = openList.get(bestPosIndex);
+
+      if (currentPosition.y == endY && currentPosition.x == endX) {
+        goalReached = true;
+        trackBackPath();
+        if ((stepsTaken + 1) <= 50) {
+          paths++;
+          printGrid();
+//          System.out.println("stepsTaken: " + stepsTaken);
+        }
+
+      }
+
+      step++;
+    }
+  }
+
+  private static void trackBackPath() {
+    Position current = grid[endY][endX];
+
+//    Position fCurrent = current;
+//    if (current == grid[endY][endX]) {
+//      if (visitedPositions.stream().noneMatch(p -> p.y == fCurrent.y && p.x == fCurrent.x)) {
+//        visitedPositions.add(current);
+//      }
+//    }
+
+    stepsTaken = 0;
+
+    visPosList = new LinkedList<>();
+      visPosList.add(endY + "-" + endX);
+
+    while (current != grid[startY][startX]) {
+      current = current.parent;
+
+      visPosList.add(current.y + "-" + current.x);
+      ++stepsTaken;
+
+      if (current.y == 50) {
+        System.out.println();
+      }
+      if (current != grid[startY][startX]) {
+        current.c = 'P';
+      }
+      Position finalCurrent = current;
+      if (stepsTaken <= 50) {
+        if (visitedPositions.stream().noneMatch(p -> p.y == finalCurrent.y && p.x == finalCurrent.x))
+          visitedPositions.add(current);
+        gridVisited[current.y][current.x] = '█';
+      }
+    }
+    if (stepsTaken <= 50) {
+      if (visitedPositions.stream().noneMatch(p -> p.y == endY && p.x == endX)) {
+        visitedPositions.add(grid[endY][endX]);
+      }
+      if (visitedPositions.stream().noneMatch(p -> p.y == startY && p.x == startX)) {
+        visitedPositions.add(grid[startY][startX]);
+      }
+      gridVisited[endY][endX] = '█';
+      gridVisited[startY][startX] = '█';
+
+
+//      visPosList.add(endY + "-" + endX);
+//      visPosList.add(startY + "-" + startX);
+
+      for (String s : visPosList) {
+        String[] split = s.split("-");
+        gridVi2[Integer.parseInt(split[0])][Integer.parseInt(split[1])] = '█';
+      }
+
+
+//      gridVisited[endY][endX] = '█';
+//      gridVisited[startY][startX] = '█';
+    }
+  }
+
+  public static void openPosition(Position position) {
+    if (!position.isOpen && !position.isChecked && !position.isWall) {
+      position.isOpen = true;
+      position.parent = currentPosition;
+      openList.add(position);
+    }
+  }
+
+  private static void printGrid2() {
+    System.out.println();
+    System.out.print("  ");
+    for (int y = -1; y < gridVi2.length; y++) {
+      if (y >= 0) {
+        System.out.printf(String.valueOf(y) + (y < 10 ? "  " : " "));
+      }
+      for (int x = 0; x < gridVi2[0].length; x++) {
+        if (y == -1) {
+          System.out.printf(String.valueOf(x));
+        } else
+          System.out.printf(String.valueOf(gridVi2[y][x]));
+      }
+      System.out.println();
+    }
+//    System.out.println();
+  }
+
+  private static void printGrid() {
+    System.out.println();
+    System.out.print("  ");
+    for (int y = -1; y < grid.length; y++) {
+      if (y >= 0) {
+        System.out.printf(String.valueOf(y) + " ");
+      }
+      for (int x = 0; x < grid[0].length; x++) {
+        if (y == -1) {
+          System.out.printf(String.valueOf(x));
+        } else
+          System.out.printf(String.valueOf(grid[y][x].c));
+      }
+      System.out.println();
+    }
+//    System.out.println();
+  }
+
+  private static class Position {
+    int y;
+    int x;
+    char c;
+    int gCost;
+    int hCost;
+    int fCost;
+    boolean isWall;
+    boolean isOpen;
+    boolean isChecked;
+    Position parent;
+
+    public Position(int y, int x, boolean isWall, char c) {
+      this.y = y;
+      this.x = x;
+      this.isWall = isWall;
+      this.c = c;
+    }
+  }
+
+  private enum Direction {
+    NORTH, EAST, SOUTH, WEST
+  }
+}
