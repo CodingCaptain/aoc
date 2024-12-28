@@ -1,0 +1,82 @@
+package org.example;
+
+import java.io.FileNotFoundException;
+import java.util.*;
+
+public class Day_2024_17 {
+
+
+    public static void main(String[] args) throws FileNotFoundException {
+
+        String test = "5,4,2,1,2,4";
+
+        int[] instructions = Arrays.stream(test.split(",")).mapToInt(Integer::parseInt).toArray();
+
+        int i = 0;
+        long registerA = 729;
+        long registerB = 0;
+        long registerC = 0;
+
+        while (i < instructions.length - 1) {
+            int opCode = instructions[i];
+            int operand = instructions[i + 1];
+            long comboOperand = -1;
+            switch (operand) {
+                case 1, 2, 3 -> comboOperand = operand;
+                case 4 -> comboOperand = registerA;
+                case 5 -> comboOperand = registerB;
+                case 6 -> comboOperand = registerC;
+            }
+
+            if (operand == 7) {
+                i += 2;
+                continue;
+            }
+
+            switch (opCode) {
+                case 0 -> {
+                    registerA = (long) Math.floor((registerA / Math.pow(2, comboOperand)));
+                    i+=2;
+                }
+                case 1 -> {
+                    registerB = registerB ^ operand;
+                    i+=2;
+                }
+                case 2 -> {
+                    String binaryString = Long.toBinaryString(comboOperand % 8);
+                    int[] array = Arrays.stream(binaryString.split("")).mapToInt(Integer::parseInt).toArray();
+                    long sum = 0;
+                    for (int i1 = 0; i1 < array.length; i1++) {
+                        if(i1 == 3)
+                            break;
+                        sum += (long) Math.pow(array[i1], i1);
+                    }
+                    registerB = sum;
+                    i+=2;
+                }
+                case 3 -> {
+
+                }
+                case 4 -> {
+
+                    i+=2;
+                }
+                case 5 -> {
+
+                    i+=2;
+                }
+                case 6 -> {
+
+                    i+=2;
+                }
+                case 7 -> {
+
+                    i+=2;
+                }
+            }
+
+
+        }
+
+    }
+}
