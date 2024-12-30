@@ -1,0 +1,169 @@
+package org.example;
+
+import java.io.IOException;
+import java.util.*;
+
+public class Main {
+
+  private static final int anInt = 8;
+
+  public static void main(String[] args) throws IOException {
+
+    String test = "2,4,1,2,7,5,4,5,0,3,1,7,5,5,3,0";
+//    test = "0,3,5,4,3,0";
+    int[] instructions = Arrays.stream(test.split(",")).mapToInt(Integer::parseInt).toArray();
+
+    long counter = 12660000000L;
+    counter = 37060000000L;
+    counter = 155360000000L;
+//    counter = 79900000000L;
+    counter = 0;
+    long registerA = 22817223;
+//    registerA += counter;
+//    registerA = 2024;
+    long startValue = registerA;
+    //    registerA = 117440;
+    long registerB = 0;
+    long registerC = 0;
+    long itCounter = 0;
+    StringJoiner sj = new StringJoiner(",");
+
+//        find(itCounter, instructions, test, sj, startValue, counter, registerA, registerB, registerC);
+    System.out.println(find2(test, instructions, startValue, 10000000000L));
+
+    //    System.out.println(registerA);
+
+  }
+
+  private static void find(long itCounter, int[] instructions, String test, StringJoiner sj, long startValue, long counter, long registerA,
+      long registerB, long registerC) {
+    loop:
+    while (!sj.toString().equals(test)) {
+      int i = 0;
+      sj = new StringJoiner(",");
+
+      if (itCounter == 10000000) {
+        itCounter = 0;
+        System.out.println(counter);
+      }
+
+      itCounter++;
+      while (i < instructions.length - 1) {
+        if (sj.toString().length() > test.length() || (!sj.toString().isEmpty() && !test.startsWith(sj.toString()))) {
+          counter += anInt;
+          registerA = startValue + counter;
+          continue loop;
+        }
+
+        int opCode = instructions[i];
+        int operand = instructions[i + 1];
+        long comboOperand = 0;
+
+        switch (operand) {
+          case 0, 1, 2, 3 -> comboOperand = operand;
+          case 4 -> comboOperand = registerA;
+          case 5 -> comboOperand = registerB;
+          case 6 -> comboOperand = registerC;
+        }
+
+        switch (opCode) {
+          case 0 -> {
+            registerA = registerA >> comboOperand;
+            i += 2;
+          }
+          case 1 -> {
+            registerB ^= operand;
+            i += 2;
+          }
+          case 2 -> {
+            registerB = comboOperand % 8;
+            i += 2;
+          }
+          case 3 -> {
+            if (registerA != 0) {
+              i = operand;
+            } else {
+              i += 2;
+            }
+          }
+          case 4 -> {
+            registerB = registerB ^ registerC;
+            i += 2;
+          }
+          case 5 -> {
+            sj.add(comboOperand % 8 + "");
+            i += 2;
+          }
+          case 6 -> {
+            registerB = registerA >> comboOperand;
+            i += 2;
+          }
+          case 7 -> {
+            registerC = registerA >> comboOperand;
+            i += 2;
+          }
+        }
+      }
+      counter += anInt;
+      registerA = startValue + counter;
+      System.out.println(sj);
+    }
+    System.out.println(registerA - anInt);
+  }
+
+  private static long find2(String test, int[] instructions, long startValue, long maxIterations) {
+    long registerA = startValue;
+    long counter = 0;
+    counter = 155360000000L;
+    counter = 168960000000L;
+
+    long myCounter = 0;
+
+    while (true) {
+      StringJoiner sj = new StringJoiner(",");
+      long registerB = 0, registerC = 0;
+      long myStart = registerA;
+
+      for (int i = 0; i < instructions.length - 1; i += 2) {
+        int opCode = instructions[i];
+        int operand = instructions[i + 1];
+        long comboOperand = switch (operand) {
+          case 0, 1, 2, 3 -> operand;
+          case 4 -> registerA;
+          case 5 -> registerB;
+          case 6 -> registerC;
+          default -> -1;
+        };
+
+        switch (opCode) {
+          case 0 -> registerA = registerA >> comboOperand;
+          case 1 -> registerB ^= operand;
+          case 2 -> registerB = comboOperand % 8;
+          case 3 -> i = (registerA != 0) ? operand - 2 : i;
+          case 4 -> registerB = registerB ^ registerC;
+          case 5 -> sj.add(comboOperand % 8+"");
+          case 6 -> registerB = registerA >> comboOperand;
+          case 7 -> registerC = registerA >> comboOperand;
+        }
+
+        if (sj.length() > test.length() || (!sj.toString().isEmpty() && !test.startsWith(sj.toString()))) {
+          break;
+        }
+      }
+
+      if (sj.toString().equals(test))
+        return myStart;
+
+      counter += 8;
+
+      registerA = startValue + counter;
+      myCounter++;
+      if(myCounter == 10000000){
+        myCounter = 0;
+        System.out.println(counter);
+      }
+      if(test.startsWith(sj.toString()))
+        System.out.println(sj);
+    }
+  }
+}
