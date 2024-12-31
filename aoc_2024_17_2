@@ -1,5 +1,3 @@
-package org.example;
-
 import java.io.IOException;
 import java.util.*;
 
@@ -19,7 +17,6 @@ public class Main {
 //    counter = 79900000000L;
     counter = 0;
     long registerA = 22817223;
-//    registerA += counter;
 //    registerA = 2024;
     long startValue = registerA;
     //    registerA = 117440;
@@ -114,8 +111,13 @@ public class Main {
   private static long find2(String test, int[] instructions, long startValue, long maxIterations) {
     long registerA = startValue;
     long counter = 0;
-    counter = 155360000000L;
-    counter = 168960000000L;
+//    counter = 155360000000L;
+//    counter = 168960000000L;
+//    counter = 193000000000L;
+//    counter = 615640000000L;
+//    counter = 813240000000L;
+    counter = 814280000000L;
+    counter = 816040000000L;
 
     long myCounter = 0;
 
@@ -138,15 +140,16 @@ public class Main {
         switch (opCode) {
           case 0 -> registerA = registerA >> comboOperand;
           case 1 -> registerB ^= operand;
-          case 2 -> registerB = comboOperand % 8;
+          case 2 -> /*registerB = comboOperand % 8*/ registerB = comboOperand & 7;
           case 3 -> i = (registerA != 0) ? operand - 2 : i;
           case 4 -> registerB = registerB ^ registerC;
-          case 5 -> sj.add(comboOperand % 8+"");
+          case 5 -> /*sj.add(comboOperand % 8+"");*/ sj.add((comboOperand & 7) + "");
           case 6 -> registerB = registerA >> comboOperand;
           case 7 -> registerC = registerA >> comboOperand;
         }
 
-        if (sj.length() > test.length() || (!sj.toString().isEmpty() && !test.startsWith(sj.toString()))) {
+        String sjToString = sj.toString();
+        if (sj.length() > test.length() || (!sjToString.isEmpty() && !test.startsWith(sjToString))) {
           break;
         }
       }
